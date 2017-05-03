@@ -9,18 +9,18 @@
 all: 
 	@ echo "## threads"
 	@ $(MAKE) -C threads
-	@ echo "## userprog"
-	@ $(MAKE) -C userprog
-	@ echo "## vm"
-	@ $(MAKE) -C vm
-	@ echo "## filesys"
-	@ $(MAKE) -C filesys
+#	@ echo "## userprog"
+#	@ $(MAKE) -C userprog
+#	@ echo "## vm"
+#	@ $(MAKE) -C vm
+#	@ echo "## filesys"
+#	@ $(MAKE) -C filesys
 #	@ echo "## network"
 #	@ $(MAKE) -C network
-	@ echo "## bin"
-	@ $(MAKE) -C bin
-	@ echo "## test"
-	@ $(MAKE) -C test
+#	@ echo "## bin"
+#	@ $(MAKE) -C bin
+#	@ echo "## test"
+#	@ $(MAKE) -C test
 
 # don't delete executables in "test" in case there is no cross-compiler
 clean:
