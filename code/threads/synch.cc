@@ -166,26 +166,47 @@ else
 
 Condition::Condition(char* debugName) 
 { 
-  
+    name = debugName;
+    value = 1;
+    queue = new List;
 }
 
 Condition::~Condition() 
 { 
+delete queue;
 
 }
 
 void Condition::Wait(Lock* conditionLock) 
 {
- 
+    spinlock.Acquire();
+    disableInterrupts();
+    readyList -> removeThis(myTCB);
+    waiting.add(myTCB);
+    lock -> Release();
+    spinlock.release();
+    suspend();
+    enableInterrupts();
+    lock -> Acquire();
+
 }
 
 void Condition::Signal(Lock* conditionLock) 
 {
+disableInterrupts();
+if(waiting.notEmpty()){ 
+    move one TCB from waiting to ready;
+}
+enableInterrupts();
 
 }
 
 void Condition::Broadcast(Lock* conditionLock) 
 {
-
+disableInterrupts();
+while(waiting.notEmpty()){
+    move all TCBs from waiting to ready;
+}
+enableInterrupts();
 
 }
