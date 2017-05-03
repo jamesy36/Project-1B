@@ -7,7 +7,7 @@ class RWLock{
   private:
 #ifndef P1_RWLOCK
 #ifdef P1_SEMAPHORE
-	Semaphore* sem;
+    Semaphore* sem; 
 #else
 	
 #endif
