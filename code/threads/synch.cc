@@ -100,14 +100,92 @@ Semaphore::V()
 // Dummy functions -- so we can compile our later assignments
 // Note -- without a correct implementation of Condition::Wait(),
 // the test case in the network assignment won't work!
-Lock::Lock(char* debugName) { }
-Lock::~Lock() { }
-void Lock::Acquire() { }
-void Lock::Release() { }
-bool Lock::isHeldByCurrentThread() { }
+Lock::Lock(char* debugName) 
+{ 
 
-Condition::Condition(char* debugName) { }
-Condition::~Condition() { }
-void Condition::Wait(Lock* conditionLock) { }
-void Condition::Signal(Lock* conditionLock) { }
-void Condition::Broadcast(Lock* conditionLock) { }
+    name = debugName;
+    value = 1;
+    queue = new List;
+
+}
+
+Lock::~Lock() 
+{ 
+
+    delete queue;
+
+}
+
+void Lock::Acquire() 
+{
+
+IntStatus oldLevel = interrupt->SetLevel(IntOff);   // disable interrupts
+
+    if (value == 0) {            // lock not available
+        queue->Append((void *)currentThread);   // so go to sleep
+        currentThread->Sleep();
+    }
+    value = 1;                    // lock available,
+    // consume its value
+
+    (void) interrupt->SetLevel(oldLevel);   // re-enable interrupts
+
+
+}
+
+void Lock::Release() 
+{ 
+    Thread *thread;
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+
+    thread = (Thread *)queue->Remove();
+    if (owner != NULL)    // make thread ready consuming owner
+        scheduler->ReadyToRun(thread);
+    value = 0;
+    (void) interrupt->SetLevel(oldLevel); //re-enable interrupts
+
+}
+
+bool Lock::isHeldByCurrentThread() 
+{ 
+if(owner != NULL){
+    return true;
+}
+else
+{
+
+ return false;
+}
+
+}
+
+
+
+
+
+
+Condition::Condition(char* debugName) 
+{ 
+  
+}
+
+Condition::~Condition() 
+{ 
+
+}
+
+void Condition::Wait(Lock* conditionLock) 
+{
+ 
+}
+
+void Condition::Signal(Lock* conditionLock) 
+{
+
+}
+
+void Condition::Broadcast(Lock* conditionLock) 
+{
+
+
+}
