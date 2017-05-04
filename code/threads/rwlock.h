@@ -9,10 +9,16 @@ class RWLock{
 #ifdef P1_SEMAPHORE
     Semaphore* sem; 
 #else
-	
+    Lock* lock;
 #endif
 #else
-
+    int reading;
+    int read_wait;
+    int writing;
+    int write_wait;
+    Condition* read;
+    Condition* write;
+    Lock* lock;    
 #endif	
   public:
     RWLock();

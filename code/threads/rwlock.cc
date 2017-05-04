@@ -26,19 +26,82 @@ void RWLock::doneWrite() {
 }
 #else
 //Task 2 code (using NACHOS Lock)
-RWLock::RWLock() { }
-RWLock::~RWLock() { }
-void RWLock::startRead() { } //NOTE that for Task 2, startRead should be the same as startWrite
-void RWLock::startWrite() { }
-void RWLock::doneRead() { } //NOTE that for Task 2, doneRead should be the same as doneWrite
-void RWLock::doneWrite() { }
+RWLock::RWLock() {
+    lock = new Lock("lock");
+}
+RWLock::~RWLock() {
+    delete lock;
+}
+void RWLock::startRead() {
+    lock->Acquire();
+} //NOTE that for Task 2, startRead should be the same as startWrite
+void RWLock::startWrite() {
+    lock->Acquire();
+}
+void RWLock::doneRead() {
+    lock->Release();
+} //NOTE that for Task 2, doneRead should be the same as doneWrite
+void RWLock::doneWrite() {
+    lock->Release();
+}
 #endif
 #else
 //Task 3 code (full rwlock)
-RWLock::RWLock() {}
-RWLock::~RWLock() { }
-void RWLock::startRead() { }
-void RWLock::doneRead() { }
-void RWLock::startWrite() { }
-void RWLock::doneWrite() { }
+RWLock::RWLock() {
+    reading = 0;
+    read_wait = 0;
+    writing = 0;
+    write_wait = 0;
+    read = new Condition("read");
+    write = new Condition("write");
+    lock = new Lock("lock");
+}
+RWLock::~RWLock() {
+    delete read;
+    delete write;
+    delete lock;
+}
+void RWLock::startRead() {
+    lock->Acquire();
+    read_wait++;
+    while(write_wait!=0 || writing!= 0){
+	read->Wait(lock);
+    }
+
+    read_wait--;
+    reading++;
+    lock->Release();
+}
+void RWLock::doneRead() {
+    lock->Acquire();
+    reading--;
+    if(reading == 0 && write_wait > 0){
+	write->Signal(lock);
+    }
+    lock->Release(); 
+}
+void RWLock::startWrite() {
+    lock->Acquire();
+    write_wait++;
+    while(writing!=0 || reading!=0){
+	write->Wait(lock);
+    }
+
+    write_wait--;
+    writing++;
+    lock->Release();
+}
+void RWLock::doneWrite() {
+    lock->Acquire();
+    writing--;
+    if(write_wait > 0){
+	write->Signal(lock);
+    }
+    
+    else if(read_wait > 0){
+	read->Broadcast(lock);
+    }
+
+    lock->Release();
+}
 #endif
