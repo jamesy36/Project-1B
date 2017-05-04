@@ -1,0 +1,11 @@
+./nachos_sem -q 1
+./nachos_sem -q 2
+./nachos_sem -q 7
+./nachos_sem -q 10
+./nachos_sem -q 11
+./nachos_sem -q 12
+./nachos_sem -q 13
+./nachos_sem -q 14
+./nachos_sem -q 15
+./nachos_sem -q 16
+./nachos_sem -q 17
