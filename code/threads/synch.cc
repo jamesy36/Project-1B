@@ -104,7 +104,7 @@ Lock::Lock(char* debugName)
 { 
 
     name = debugName;
-    value = 1;
+    value = 0;
     queue = new List;
 
 }
@@ -121,11 +121,11 @@ void Lock::Acquire()
 
 IntStatus oldLevel = interrupt->SetLevel(IntOff);   // disable interrupts
 
-    if (value == 0) {            // lock not available
+    while(value == 1){          // lock not available
         queue->Append((void *)currentThread);   // so go to sleep
         currentThread->Sleep();
     }
-    value = 1;                    // lock available,
+    value = 1;                    
     // consume its value
 
     (void) interrupt->SetLevel(oldLevel);   // re-enable interrupts
@@ -134,79 +134,112 @@ IntStatus oldLevel = interrupt->SetLevel(IntOff);   // disable interrupts
 }
 
 void Lock::Release() 
-{ 
+{   
+
     Thread *thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    if(isHeldByCurrentThread())
+    {
+        value = 0;
+    }
 
     thread = (Thread *)queue->Remove();
-    if (owner != NULL)    // make thread ready consuming owner
+    if (thread != NULL){   // make thread ready consuming owner
         scheduler->ReadyToRun(thread);
-    value = 0;
-    (void) interrupt->SetLevel(oldLevel); //re-enable interrupts
+    }
+    
+    (void) interrupt->SetLevel(oldLevel); 
 
 }
 
 bool Lock::isHeldByCurrentThread() 
 { 
-if(owner != NULL){
-    return true;
+if(value ==1){
+
+ return true;
 }
 else
 {
 
- return false;
-}
+return false;
 
 }
 
-
-
+}
 
 
 
 Condition::Condition(char* debugName) 
 { 
-    name = debugName;
-    value = 1;
-    queue = new List;
+
+name = debugName;
+queue = new List;
+conditionLock = new Lock("conditionLock");
+
 }
 
 Condition::~Condition() 
 { 
+
 delete queue;
+delete conditionLock;
 
 }
 
 void Condition::Wait(Lock* conditionLock) 
 {
-    spinlock.Acquire();
-    disableInterrupts();
-    readyList -> removeThis(myTCB);
-    waiting.add(myTCB);
-    lock -> Release();
-    spinlock.release();
-    suspend();
-    enableInterrupts();
-    lock -> Acquire();
+
+
+
+IntStatus oldLevel = interrupt->SetLevel(IntOff);   // disable interrupts
+
+conditionLock->Release();
+
+queue->Append((void *) currentThread);
+currentThread->Sleep();
+
+(void) interrupt->SetLevel(oldLevel);   // re-enable interrupts
+
+conditionLock->Acquire();
+
 
 }
 
 void Condition::Signal(Lock* conditionLock) 
 {
-disableInterrupts();
-if(waiting.notEmpty()){ 
-    move one TCB from waiting to ready;
+
+Thread *thread;
+
+IntStatus oldLevel = interrupt->SetLevel(IntOff);   // disable interrupts
+
+if(conditionLock->isHeldByCurrentThread()){
+
+    thread = (Thread *)queue->Remove();
+
+if(thread != NULL)
+{
+    scheduler->ReadyToRun(thread);   
 }
-enableInterrupts();
+
+}
+ (void) interrupt->SetLevel(oldLevel);   // re-enable interrupts
 
 }
 
 void Condition::Broadcast(Lock* conditionLock) 
-{
-disableInterrupts();
-while(waiting.notEmpty()){
-    move all TCBs from waiting to ready;
+{   
+    Thread *thread;
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+   if(conditionLock->isHeldByCurrentThread()){
+    while(!queue->IsEmpty()){
+        thread = (Thread *)queue->Remove();
+        if(thread != NULL){
+            scheduler->ReadyToRun(thread);         
+        }
+    }
+
 }
-enableInterrupts();
+ 
+ (void) interrupt->SetLevel(oldLevel);  
 
 }

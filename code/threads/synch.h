@@ -87,6 +87,7 @@ private:
     int value;         // mutex value, should always be 0/1 or some other binary value
     List *queue;       // threads waiting on this lock
     Thread *owner;     // thread that currently holds the lock
+    
 };
 
 // The following class defines a "condition variable".  A condition
@@ -142,5 +143,6 @@ private:
     char* name;
     // plus some other stuff you'll need to define
     List *queue;       // threads waiting for on this condition var
+    Lock *conditionLock;
 };
 #endif // SYNCH_H
